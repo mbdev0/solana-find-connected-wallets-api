@@ -22,15 +22,19 @@ function filter_tx(data) {
                 return new Error(res.status)
             })
             .then(data => {
-                let account_keys = data['result']['transaction']['message']['accountKeys']
-                const preBalances = data['result']['meta']['preBalances']
-                const postBalances = data['result']['meta']['postBalances']
-                let account_info = { 
-                    account_from: [account_keys[0], postBalances[0]/LAMPORTS],
-                    account_to: [account_keys[1],postBalances[1]/LAMPORTS]
+                if (data['result']['transaction']['message']['instructions'][0]['data'] === '3Bxs411Dtc7pkFQj'){
+                    let account_keys = data['result']['transaction']['message']['accountKeys']
+                    const preBalances = data['result']['meta']['preBalances']
+                    const postBalances = data['result']['meta']['postBalances']
+                    let account_info = { 
+                        account_from: [account_keys[0], postBalances[0]/LAMPORTS],
+                        account_to: [account_keys[1],postBalances[1]/LAMPORTS]
+                    }
+                    console.log(`${account_info['account_from'][0]} ----> ${account_info['account_to'][0]}`)
+                    console.log('==============================================')
                 }
-                console.log(`${account_info['account_from'][0]} ${account_info['account_from'][1]}  -- +${(preBalances[0]-postBalances[0])/LAMPORTS} -->  ${account_info['account_to'][0]} ${account_info['account_to'][1]}`)
-                console.log(account_info)
+                
+    
             }
             )
             .catch( (error) => {
@@ -57,7 +61,7 @@ function getSignatures(address){
             "params": [
             address,
             {
-                "limit":1
+                "limit":5
             }
             ]
         })
@@ -76,6 +80,7 @@ function getSignatures(address){
             }
             console.log('Error: ',error)
     })
+ 
 }
 
 const address = 'RhBh8W7dZQbvCzm3bGRCCuf3jvLB8xLxZhQWASsRQEb'

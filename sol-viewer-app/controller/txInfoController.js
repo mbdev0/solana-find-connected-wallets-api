@@ -2,6 +2,7 @@ const { response } = require('express');
 
 const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 let getAllSolTransfers = async(body,res) => {
+    const rpc = 'https://api.mainnet-beta.solana.com';
     let sol_transfers = [];
     let signatureArr = [];
     
@@ -10,7 +11,7 @@ let getAllSolTransfers = async(body,res) => {
     };
 
     async function getSignatures() {
-        let resp = await fetch('https://api.mainnet-beta.solana.com', {
+        let resp = await fetch(rpc, {
                 method: 'POST',
                 headers: headers,
                 body: JSON.stringify({
@@ -20,7 +21,7 @@ let getAllSolTransfers = async(body,res) => {
                     "params": [
                     "9EW8AJiaY32J4gJYqiK3zbfkekp3mc2n6CVXaopPfdXE",
                     {
-                        "limit": 3
+                        "limit": 10
                     }
                     ]
                 })
@@ -37,7 +38,7 @@ let getAllSolTransfers = async(body,res) => {
 
     async function getSolTransfers() {
         for(let signature of signatureArr){
-            let tx = await fetch('https://api.mainnet-beta.solana.com',{
+            let tx = await fetch(rpc,{
                     method: 'POST',
                     headers:headers,
                     body: JSON.stringify(
@@ -52,15 +53,18 @@ let getAllSolTransfers = async(body,res) => {
                         }
                     )});
         
-            let tx_info = await tx.json()
-            console.log(tx_info)
-        }
+            let tx_info = await tx.json();
+            let tx_instructions = tx_info['result']['transaction']['message']['instructions'];
+            if (tx_instructions.length == 1 && tx_instructions[0]['programIdIndex']==2){
+                console.log('sol-transfer');
+            } else {
+                console.log('not sol-transfer');
+            };
+            //console.log(tx_info['result']['transaction']['message']['instructions'])
+        };
     };
     getSolTransfers();
-
-    console.log(signatureArr)
-    //let signatureInfoRes = await signatureInfo.json();
-    //console.log(signatureInfoRes);
+    console.log(signatureArr);
     res.status(200).json(sol_transfers);
 };
 

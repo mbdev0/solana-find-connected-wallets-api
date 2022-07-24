@@ -9,6 +9,7 @@ let getAllSolTransfers = async(body,res) => {
     const headers = {
         'Content-Type':'application/json'
     };
+    console.log(body.body['wallet'])
 
     async function getSignatures() {
         let resp = await fetch(rpc, {
@@ -19,7 +20,7 @@ let getAllSolTransfers = async(body,res) => {
                     "id": 1,
                     "method": "getSignaturesForAddress",
                     "params": [
-                    "CzH2JUNemZxV93jANVa7G6nUaCmCvUaTRoL3d6hq4wDj",
+                    body.body['wallet'],
                     {
                         "limit": 10
                     }
@@ -60,9 +61,7 @@ let getAllSolTransfers = async(body,res) => {
             if (tx_instructions.length == 1 && tx_instructions[0]['programIdIndex']==2){
                 //pushes an array = [walletFrom, walletTo, Amount in Sol]
                 sol_transfers.push([tx_info['result']['transaction']['message']['accountKeys'][0], tx_info['result']['transaction']['message']['accountKeys'][1], Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports]);
-                //console.log(tx_info['result']['transaction']['message']['accountKeys'][0], tx_info['result']['transaction']['message']['accountKeys'][1])
-                //console.log(Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports)
-                console.log('sol-transfer');
+                //console.log('sol-transfer');
             } else {
                 console.log('not sol-transfer');
             };

@@ -4,7 +4,6 @@ const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch
 let getAllSolTransfers = async(body,res) => {
     const rpc = 'https://api.mainnet-beta.solana.com';
     const lamports = 1000000000;
-    let sol_transfers = [];
     let signatureArr = [];
     
     const headers = {
@@ -20,9 +19,9 @@ let getAllSolTransfers = async(body,res) => {
                     "id": 1,
                     "method": "getSignaturesForAddress",
                     "params": [
-                    "9EW8AJiaY32J4gJYqiK3zbfkekp3mc2n6CVXaopPfdXE",
+                    "CzH2JUNemZxV93jANVa7G6nUaCmCvUaTRoL3d6hq4wDj",
                     {
-                        "limit": 1
+                        "limit": 10
                     }
                     ]
                 })
@@ -39,6 +38,7 @@ let getAllSolTransfers = async(body,res) => {
     await getSignatures()
 
     async function getSolTransfers() {
+        let sol_transfers = [];
         for(let signature of signatureArr){
             let tx = await fetch(rpc,{
                     method: 'POST',
@@ -58,16 +58,18 @@ let getAllSolTransfers = async(body,res) => {
             let tx_info = await tx.json();
             let tx_instructions = tx_info['result']['transaction']['message']['instructions'];
             if (tx_instructions.length == 1 && tx_instructions[0]['programIdIndex']==2){
-                
-                //balance change == console.log(Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports)
+                //pushes an array = [walletFrom, walletTo, Amount in Sol]
+                sol_transfers.push([tx_info['result']['transaction']['message']['accountKeys'][0], tx_info['result']['transaction']['message']['accountKeys'][1], Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports]);
+                //console.log(tx_info['result']['transaction']['message']['accountKeys'][0], tx_info['result']['transaction']['message']['accountKeys'][1])
+                //console.log(Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports)
                 console.log('sol-transfer');
             } else {
                 console.log('not sol-transfer');
             };
-            //console.log(tx_info['result']['transaction']['message']['instructions'])
         };
+        return sol_transfers;
     };
-    getSolTransfers();
+    let sol_transfers = await getSolTransfers();
     console.log(signatureArr);
     res.status(200).json(sol_transfers);
 };

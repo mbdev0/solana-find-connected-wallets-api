@@ -22,7 +22,7 @@ let getAllSolTransfers = async(body,res) => {
                     "params": [
                     body.body['wallet'],
                     {
-                        "limit": 10
+                        "limit": 100
                     }
                     ]
                 })
@@ -30,8 +30,8 @@ let getAllSolTransfers = async(body,res) => {
 
         let data = await resp.json();
         for(let result of data['result']){
-            //error == null as well
-            if (result['confirmationStatus'] == 'finalized') {
+
+            if (result['confirmationStatus'] == 'finalized' && result['err'] == null) {
                 signatureArr.push(result['signature'])
             }
         }
@@ -55,10 +55,10 @@ let getAllSolTransfers = async(body,res) => {
                             ]
                         }
                     )});
-        
+            console.log(tx.status)
             let tx_info = await tx.json();
             let tx_instructions = tx_info['result']['transaction']['message']['instructions'];
-            if (tx_instructions.length == 1 && tx_instructions[0]['programIdIndex']==2){
+            if (tx_instructions.length == 1 && tx_instructions[0]['programIdIndex']==2 && tx_info['result']['meta']['postBalances'].length == 3){
                 //pushes an array = [walletFrom, walletTo, Amount in Sol]
                 sol_transfers.push([tx_info['result']['transaction']['message']['accountKeys'][0], tx_info['result']['transaction']['message']['accountKeys'][1], Math.abs(tx_info['result']['meta']['postBalances'][1] - tx_info['result']['meta']['preBalances'][1])/lamports]);
                 //console.log('sol-transfer');
@@ -69,7 +69,7 @@ let getAllSolTransfers = async(body,res) => {
         return sol_transfers;
     };
     let sol_transfers = await getSolTransfers();
-    console.log(signatureArr);
+    //console.log(signatureArr);
     res.status(200).json(sol_transfers);
 };
 

@@ -9,4 +9,6 @@ const {
 router.route('/api/getSolTransfers').post(getAllSolTransfers);
 
 
+
+
 module.exports = router;

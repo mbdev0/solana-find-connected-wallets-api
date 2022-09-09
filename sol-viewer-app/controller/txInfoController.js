@@ -76,10 +76,50 @@ const getAllSplTransfers = async(body,res) => {
 }
 
 const getSortedSolTransfers = async(body,res) => {
-    let sortedTransfers = [];
+    let sortedTransfers = {
+        sourceWallet: '',
+        totalOfSolTransactions: 0,
+        wallets: {}
+        };
+    let visited = [];
     await allSolTransfers(body)
+    // if the wallet is not in the sortedTransfers -> add object key as wallet and then push [{tx info}] as value
+        // else : add tx to wallet it corresponds with
+    for(let tx of sol_transfers){
+            if (tx.source != body.body.wallet){
+                if (!(visited.includes(tx.source))) {
+                    visited.push(tx.source)
+                    sortedTransfers.wallets[tx.source] = { 
+                        numberOfSolTransactions: 0,
+                        transactions: [tx]}
+                    
+                    sortedTransfers.wallets[tx.source].numberOfSolTransactions = sortedTransfers.wallets[tx.source].transactions.length
+                }
+                else{
+                sortedTransfers.wallets[tx.source].transactions.push(tx)
+                sortedTransfers.wallets[tx.source].numberOfSolTransactions = sortedTransfers.wallets[tx.source].transactions.length
+                }
+            }
 
-    
+            if (tx.destination != body.body.wallet) {
+                if (!(visited.includes(tx.destination))){
+                    visited.push(tx.destination)
+                    sortedTransfers.wallets[tx.destination] = { 
+                        numberOfSolTransactions: 0,
+                        transactions: [tx]}
+                    
+                    sortedTransfers.wallets[tx.destination].numberOfSolTransactions = sortedTransfers.wallets[tx.destination].transactions.length
+                }
+
+                else{    
+                sortedTransfers.wallets[tx.destination].transactions.push(tx)
+                sortedTransfers.wallets[tx.destination].numberOfSolTransactions = sortedTransfers.wallets[tx.destination].transactions.length
+                }
+            }
+        }
+
+    console.log(visited)
+
     res.status(200).json(sortedTransfers)
 }
 

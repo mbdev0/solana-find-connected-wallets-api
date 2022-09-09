@@ -15,51 +15,55 @@ const allSolTransfers = async(body) => {
     sol_transfers = []
     let offset = 0
     let wallet = body.body.wallet
-    while (true) {
-        let resp = await fetch(`https://public-api.solscan.io/account/solTransfers?account=${wallet}&offset=${offset}&limit=50`);
-        data = await resp.json()
-        for (transfer of data['data']) {
-            if (transfer.status !== 'Success') {
-                failed_sol_transfers.push(transfer)
-            }
-            let time = new Date(transfer['blockTime'] * 1000)
+        while (true) {
+            let resp = await fetch(`https://public-api.solscan.io/account/solTransfers?account=${wallet}&offset=${offset}&limit=50`);
+            data = await resp.json()
+            for (transfer of data['data']) {
+                if (transfer.status !== 'Success') {
+                    failed_sol_transfers.push(transfer)
+                }
+                let time = new Date(transfer['blockTime'] * 1000)
 
-            let amount
-            if (transfer['src'] === wallet){
-                amount = `-${transfer['lamport'] / lamports}`
-            } else {
-                amount = `+${transfer['lamport'] / lamports} `
-            }
+                let amount
+                if (transfer['src'] === wallet){
+                    amount = `-${transfer['lamport'] / lamports}`
+                } else {
+                    amount = `+${transfer['lamport'] / lamports} `
+                }
 
-            const st = {
-                source: transfer['src'],
-                destination: transfer['dst'],
-                amount: amount,
-                date: `${time.toLocaleString('en-GB', { timeZone: 'UTC' })} UTC`,
-                solScanTxLink: `https://solscan.io/tx/${transfer['txHash']}`
+                const st = {
+                    source: transfer['src'],
+                    destination: transfer['dst'],
+                    amount: amount,
+                    date: `${time.toLocaleString('en-GB', { timeZone: 'UTC' })} UTC`,
+                    solScanTxLink: `https://solscan.io/tx/${transfer['txHash']}`
+                }
+                sol_transfers.push(st)
             }
-            sol_transfers.push(st)
-        }
-        offset += 50
+            offset += 50
 
-        if (data['data'].length !== 50 || offset > 2000) {
-            break
+            if (data['data'].length !== 50 || offset > 2000) {
+                break
+            }
         }
     }
-    //console.log(sol_transfers.length)
 
-}
 
 const getAllSolTransfers = async (body, res) => {
-    await allSolTransfers(body)
-    res.status(200).json(sol_transfers);
+    try {
+        await allSolTransfers(body)
+        return res.status(200).json(sol_transfers);
+    } 
+    catch(err){
+        return res.status(404).send({message:'Make sure wallet is correct'})
+    }
 };
 
 const getAllSplTransfers = async(body,res) => {
     let offset = 0
     const wallet = body.body.wallet
     console.log(wallet)
-
+    try{
     while (true){
         let resp = await fetch(`https://public-api.solscan.io/account/splTransfers?account=${wallet}&offset=${offset}&limit=50`)
         let data = await resp.json()
@@ -72,17 +76,26 @@ const getAllSplTransfers = async(body,res) => {
             break
         }
     }
-    res.status(200).json(spl_transfers)
+    return res.status(200).json(spl_transfers)
+    } catch(err) {
+        return res.status(404).send({message: 'Please check your wallet'})
+    }
 }
 
 const getSortedSolTransfers = async(body,res) => {
     let sortedTransfers = {
-        sourceWallet: '',
+        walletToSearch: body.body.wallet,
         totalOfSolTransactions: 0,
         wallets: {}
         };
     let visited = [];
-    await allSolTransfers(body)
+    try {
+        await allSolTransfers(body)
+    }
+    catch(err) {
+        return res.status(404).send({message: 'Please check your wallet'})
+    }
+    sortedTransfers.totalOfSolTransactions = sol_transfers.length
     // if the wallet is not in the sortedTransfers -> add object key as wallet and then push [{tx info}] as value
         // else : add tx to wallet it corresponds with
     for(let tx of sol_transfers){
@@ -110,7 +123,6 @@ const getSortedSolTransfers = async(body,res) => {
                     
                     sortedTransfers.wallets[tx.destination].numberOfSolTransactions = sortedTransfers.wallets[tx.destination].transactions.length
                 }
-
                 else{    
                 sortedTransfers.wallets[tx.destination].transactions.push(tx)
                 sortedTransfers.wallets[tx.destination].numberOfSolTransactions = sortedTransfers.wallets[tx.destination].transactions.length
@@ -120,7 +132,7 @@ const getSortedSolTransfers = async(body,res) => {
 
     console.log(visited)
 
-    res.status(200).json(sortedTransfers)
+    return res.status(200).json(sortedTransfers)
 }
 
 

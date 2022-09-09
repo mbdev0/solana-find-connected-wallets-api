@@ -55,7 +55,7 @@ const getAllSolTransfers = async (body, res) => {
         return res.status(200).json(sol_transfers);
     } 
     catch(err){
-        return res.status(404).send({message:'Make sure wallet is correct'})
+        return res.status(404).send({message:'Make sure wallet is correct or your payload is correct'})
     }
 };
 
@@ -78,7 +78,7 @@ const getAllSplTransfers = async(body,res) => {
     }
     return res.status(200).json(spl_transfers)
     } catch(err) {
-        return res.status(404).send({message: 'Please check your wallet'})
+        return res.status(404).send({message: 'Please check your wallet or your payload is correct'})
     }
 }
 
@@ -93,7 +93,7 @@ const getSortedSolTransfers = async(body,res) => {
         await allSolTransfers(body)
     }
     catch(err) {
-        return res.status(404).send({message: 'Please check your wallet'})
+        return res.status(404).send({message: 'Please check your wallet or your payload is correct'})
     }
     sortedTransfers.totalOfSolTransactions = sol_transfers.length
     // if the wallet is not in the sortedTransfers -> add object key as wallet and then push [{tx info}] as value

@@ -48,7 +48,6 @@ const allSolTransfers = async(body) => {
         }
     }
 
-
 const getAllSolTransfers = async (body, res) => {
     try {
         await allSolTransfers(body)

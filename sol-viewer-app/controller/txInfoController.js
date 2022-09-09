@@ -10,7 +10,9 @@ let spl_transfers = [];
 let failed_sol_transfers =[];
 const lamports = 1000000000
 
-const getAllSolTransfers = async (body, res) => {
+
+const allSolTransfers = async(body) => {
+    sol_transfers = []
     let offset = 0
     let wallet = body.body.wallet
     while (true) {
@@ -44,8 +46,12 @@ const getAllSolTransfers = async (body, res) => {
             break
         }
     }
-    console.log(sol_transfers.length)
+    //console.log(sol_transfers.length)
 
+}
+
+const getAllSolTransfers = async (body, res) => {
+    await allSolTransfers(body)
     res.status(200).json(sol_transfers);
 };
 
@@ -65,15 +71,21 @@ const getAllSplTransfers = async(body,res) => {
         if (data['data'].length !== 50 || offset > 2000) {
             break
         }
-        
-
     }
-
     res.status(200).json(spl_transfers)
+}
+
+const getSortedSolTransfers = async(body,res) => {
+    let sortedTransfers = [];
+    await allSolTransfers(body)
+
+    
+    res.status(200).json(sortedTransfers)
 }
 
 
 module.exports = {
     getAllSolTransfers,
-    getAllSplTransfers
+    getAllSplTransfers,
+    getSortedSolTransfers
 };
